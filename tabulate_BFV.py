@@ -1,5 +1,6 @@
 import tenseal as ts  # to run this file make sure to install both tenseal and numpy
 import os
+import sys
 
 
 # Get private key context for vote tabulation + decryption
@@ -10,20 +11,24 @@ if os.path.isfile('./privatekey_context_BFV'):
     context = ts.context_from(bytes.fromhex(hex_line))
 else:
     print("Context not available")
-    done = True
+    sys.exit()
 
 
 # Get votes from votes_database file
-file = open("./votes_database_BFV","r")
-buff = file.read()
-file.close()
+if os.path.isfile('./votes_database_BFV'):
+    file = open("./votes_database_BFV","r")
+    buff = file.read()
+    file.close()
+else:
+    print("Votes unavailable")
+    sys.exit()
 
 hexVotes = buff.split(hex(13))  # Split on carriage return to get votes
 votes = []
-i = 0
+i = 1
 while i<len(hexVotes)-1:
     votes.append(ts.bfv_vector_from(context,bytes.fromhex(hexVotes[i])))
-    i += 1
+    i += 2  # Even entries are voterIDs
 
 
 # Tabulate votes
@@ -34,5 +39,23 @@ while i < len(votes):
     i += 1
 
 resultvector = results.decrypt()
+#print(resultvector)
 
-print(resultvector) 
+print("-----------------------------------------------")
+print("Election results:")
+candidates = ["Drake", "Lisan al Gaib", "Mark Zuckerberg", "Ronald Mathew",
+               "Muscrat Representative", "Salim Shady", "Spongebob", "Big Mac", "Silvouplait"]
+i = 0
+max = 0
+maxIndex = 1
+while i < len(resultvector):
+    print(candidates[i] + ": " + str(resultvector[i]) + " votes")
+    if resultvector[i] > max:
+        max = resultvector[i]
+        maxIndex = i
+    i+=1
+
+# Assume that there are no ties
+print("-----------------------------------------------")
+print(candidates[maxIndex] + " won the election with " + str(resultvector[maxIndex]) + " votes")
+print("-----------------------------------------------")

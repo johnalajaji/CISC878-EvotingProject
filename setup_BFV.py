@@ -6,10 +6,8 @@ import tenseal as ts  # to run this file make sure to install both tenseal and n
 context = ts.context(
             ts.SCHEME_TYPE.BFV,
             poly_modulus_degree=8192,
-            plain_modulus=1032193
+            plain_modulus=9781249
         )
-
-context.global_scale = 2**40
 
 # Save private copy of context 
 secret_context = context.copy()
@@ -29,3 +27,11 @@ client_context = client_context.hex()
 file = open("publickey_context_BFV","w")
 file.write(client_context)
 file.close()
+
+# # testing
+# vec = [1234567,2,3,4,5,6,7]
+# client = ts.context_from(bytes.fromhex(client_context))
+# encrypted = ts.bfv_vector(client, vec)
+# secret = ts.context_from(bytes.fromhex(secret_context))
+# res = encrypted.decrypt(secret.secret_key())
+# print(res)

@@ -1,5 +1,7 @@
 import tenseal as ts  # to run this file make sure to install both tenseal and numpy
 import os
+import time
+import sys
 
 screen = "home"
 done = False
@@ -14,19 +16,63 @@ else:
     print("Context not available")
     done = True
 
+# Get previously voted voterIDs (if any)
+if os.path.isfile('./votes_database_BFV'):
+    file = open("./votes_database_BFV","r")
+    buff = file.read()
+    file.close()
+    gotvotes = True
+else:
+    gotvotes = False
+
+votedID = []
+if gotvotes:
+    hexVotes = buff.split(hex(13))  # Split on carriage return to get voterIDs and votes
+    i = 0
+    while i<len(hexVotes)-1:
+        votedID.append(hexVotes[i])
+        i += 2
 
 # Begin terminal user interface
 while (not done):
+    # Home screen
     if screen == "home":
+        os.system('cls' if os.name == 'nt' else 'clear')
         print("Select an option below:")
         print("1. Enter a vote")
-        #print("2. Tabulate votes (Requires ADMIN Privileges)")
         print("2. Exit")
         screen = input("Selected option number: ")
+    # Want to input vote (first input voterID)
     elif screen == "1":
+        os.system('cls' if os.name == 'nt' else 'clear')
         voterid = input("Please enter your assigned voter ID: ")
-        screen = "vote"
+        
+        if (voterid in votedID):
+            print("Voter ID already used")
+            time.sleep(0.7)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.7)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.7)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.7)
+            screen = "home"
+        elif not voterid.isdigit():
+            print("Voter ID is invalid") 
+            desire = input("Press 1 to try again or 2 to return to the home screen: ")
+            if desire == "1":
+                screen = "1"
+            else:
+                screen = "home"
+        else:
+            votedID.append(voterid)
+            screen = "vote"
+    # Input vote
     elif screen == "vote":
+        os.system('cls' if os.name == 'nt' else 'clear')
         print("Please choose a candidate from the list below:")
         print("1. Drake")
         print("2. Lisan al Gaib")
@@ -36,34 +82,65 @@ while (not done):
         print("6. Salim Shady")
         print("7. Spongebob")
         print("8. Big Mac")
-        print("9. Silvouplait")
+
+        # Get valid vote
+        valid = ["1","2","3","4","5","6","7","8"]
         vote = input("Selected candidate number: ")
-        voteVector = [int(voterid)]
-        
-        i = 0
-        while (i<9):
-            if (i+1 == int(vote)):
-                voteVector.append(1)
-            else:
-                voteVector.append(0)
-            i += 1
+        if vote in valid:
+            voteVector = []
+            i = 0
+            while (i<8):
+                if (i+1 == int(vote)):
+                    voteVector.append(1)
+                else:
+                    voteVector.append(0)
+                i += 1
 
-        encryptedVote = ts.bfv_vector(context, voteVector)
-        voteVector = []  # Clear the value for voteVector
-        encryptedVote = encryptedVote.serialize()
-        encryptedVote = encryptedVote.hex()
-        #votes.append(encryptedVote)
+            encryptedVote = ts.bfv_vector(context, voteVector)
+            voteVector = []  # Clear the value for voteVector
+            encryptedVote = encryptedVote.serialize()
+            encryptedVote = encryptedVote.hex()
 
-        # Write encrypted vote to "database"
-        file = open("votes_database_BFV","a")
-        file.write(encryptedVote)
-        file.write(hex(13))  # Add carriage return
-        file.close()
+            # Write encrypted vote to "database"
+            file = open("votes_database_BFV","a")
+            file.write(voterid)
+            file.write(hex(13))  # Add carriage return
+            file.write(encryptedVote)
+            file.write(hex(13))  # Add carriage return
+            file.close()
 
-        screen = "home"
+            screen = "home"
+        else:
+            print("Vote invalid. Please choose one of the available options.")
+            time.sleep(0.7)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.7)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.7)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(0.7)
+            screen = "vote"
+    # Terminate program
     elif screen == "2":
+        os.system('cls' if os.name == 'nt' else 'clear')
         done = True
+    # Invalid input
     else:
+        os.system('cls' if os.name == 'nt' else 'clear')
         print("Please choose a valid option")
+        time.sleep(0.7)
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.7)
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.7)
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.7)
+        screen = "home"
 
 
