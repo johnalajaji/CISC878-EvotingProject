@@ -1,11 +1,15 @@
 import tenseal as ts  # to run this file make sure to install both tenseal and numpy
 import os
 import sys
+import time
+
+# Start timer for benchmark
+start_time = time.time()
 
 
 # Get public key context
-if os.path.isfile('./publickey_context_CKKS'):
-    file = open("publickey_context_CKKS","r")
+if os.path.isfile('./publickey_context_BFV_benchmark'):
+    file = open("publickey_context_BFV_benchmark","r")
     hex_line = file.read()
     file.close()
     context = ts.context_from(bytes.fromhex(hex_line))
@@ -15,8 +19,8 @@ else:
 
 
 # Get votes from votes_database file
-if os.path.isfile('./votes_database_CKKS'):
-    file = open("./votes_database_CKKS","r")
+if os.path.isfile('./votes_database_BFV_benchmark'):
+    file = open("./votes_database_BFV_benchmark","r")
     buff = file.read()
     file.close()
 else:
@@ -27,8 +31,8 @@ hexVotes = buff.split(hex(13))  # Split on carriage return to get votes
 votes = []
 i = 1
 while i<len(hexVotes)-1:
-    votes.append(ts.ckks_vector_from(context,bytes.fromhex(hexVotes[i])))
-    i += 2
+    votes.append(ts.bfv_vector_from(context,bytes.fromhex(hexVotes[i])))
+    i += 2  # Even entries are voterIDs
 
 
 # Tabulate votes
@@ -38,10 +42,15 @@ while i < len(votes):
     results += votes[i]
     i += 1
 
+
 resultstring = results.serialize()
 resultstring = resultstring.hex()
 
 # Write encrypted result to text file
-file = open("tabulation_result_CKKS","w")
+file = open("tabulation_result_BFV_benchmark","w")
 file.write(resultstring)
 file.close()
+
+
+# Get run time
+print("--- %s seconds ---" % (time.time() - start_time))

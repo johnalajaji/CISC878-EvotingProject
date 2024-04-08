@@ -3,15 +3,15 @@ import os
 import sys
 
 
-# Get private key context for vote tabulation + decryption
-if os.path.isfile('./privatekey_context_BFV'):
-    file = open("privatekey_context_BFV","r")
+# Get public key context
+if os.path.isfile('./publickey_context_BFV'):
+    file = open("publickey_context_BFV","r")
     hex_line = file.read()
     file.close()
     context = ts.context_from(bytes.fromhex(hex_line))
 else:
     print("Context not available")
-    sys.exit()
+    done = True
 
 
 # Get votes from votes_database file
@@ -38,24 +38,13 @@ while i < len(votes):
     results += votes[i]
     i += 1
 
-resultvector = results.decrypt()
-#print(resultvector)
 
-print("-----------------------------------------------")
-print("Election results:")
-candidates = ["Drake", "Lisan al Gaib", "Mark Zuckerberg", "Ronald Mathew",
-               "Muscrat Representative", "Salim Shady", "Spongebob", "Big Mac", "Silvouplait"]
-i = 0
-max = 0
-maxIndex = 1
-while i < len(resultvector):
-    print(candidates[i] + ": " + str(resultvector[i]) + " votes")
-    if resultvector[i] > max:
-        max = resultvector[i]
-        maxIndex = i
-    i+=1
+resultstring = results.serialize()
+resultstring = resultstring.hex()
 
-# Assume that there are no ties
-print("-----------------------------------------------")
-print(candidates[maxIndex] + " won the election with " + str(resultvector[maxIndex]) + " votes")
-print("-----------------------------------------------")
+# Write encrypted result to text file
+file = open("tabulation_result_BFV","w")
+file.write(resultstring)
+file.close()
+
+
